@@ -29,6 +29,7 @@ import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,25 +47,31 @@ import com.example.composenavigationdemo.ui.component2.RgbColorPicker
 import com.example.composenavigationdemo.ui.theme2.Material2Theme
 import com.example.composenavigationdemo.ui.theme2.Orange500
 import com.example.composenavigationdemo.ui.theme2.generate
+import com.example.composenavigationdemo.viewmodel.ColorViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 @Composable
 fun Material2Screen(
     darkTheme: Boolean = false,
-    navigateTo: (String) -> Unit
+    navigateTo: (String) -> Unit,
+    viewModel: ColorViewModel,
 ) {
-    var darkSwitchOn by remember { mutableStateOf(darkTheme) }
+    val color by viewModel.color.collectAsState(initial = Orange500)
+    val isDark by viewModel.darkMode.collectAsState(initial = darkTheme)
 
-    var colorPalette by remember {
-        mutableStateOf(generate(primaryColor = Orange500).also { darkSwitchOn = !it.isLight })
-    }
+    var darkSwitchOn: Boolean? by remember { mutableStateOf(null) }
+
+    val colorPalette = (darkSwitchOn?.let {
+        generate(primaryColor = color, useLight = !it)
+    } ?: generate(primaryColor = color))
+        .also { viewModel.toggleMode(!it.isLight) }
 
     var showDialog by remember { mutableStateOf(false) }
 
+    var colorValue =colorPalette.primary
+
     Material2Theme(colorPalette = colorPalette) {
-        val colorPrimary = MaterialTheme.colors.primary
-        var colorValue by remember { mutableStateOf(colorPrimary) }
 
         Scaffold(
             modifier = Modifier.fillMaxSize(),
@@ -72,15 +79,16 @@ fun Material2Screen(
                 TopAppBar(contentPadding = PaddingValues(horizontal = 16.dp)) {
                     Text(
                         text = "Material2",
-                        style = MaterialTheme.typography.h4
+                        style = MaterialTheme.typography.h5
                     )
                     Spacer(modifier = Modifier.weight(1f))
                     Text(text = "Light")
                     Switch(
-                        checked = darkSwitchOn,
+                        checked = isDark,
                         onCheckedChange = {
                             darkSwitchOn = it
-                            colorPalette = generate(primaryColor = colorPrimary, useLight = !it)
+                            viewModel.toggleMode(dark = it)
+                            viewModel.setColor(color = colorPalette.primary)
                         }
                     )
                     Text(text = "Dark")
@@ -104,7 +112,7 @@ fun Material2Screen(
             ) {
                 Material2Contents(
                     modifier = Modifier.fillMaxSize(),
-                    onButtonClick = { navigateTo(ScreenRoute.Home.route) },
+                    onButtonClick = { navigateTo(ScreenRoute.Material3.route) },
                 )
 
                 if (showDialog) {
@@ -113,12 +121,12 @@ fun Material2Screen(
                         positiveText = "OK",
                         onNegativeClick = {
                             showDialog = false
-                            colorValue = colorPrimary
+                            colorValue = colorPalette.primary
                         },
                         onPositiveClick = {
                             showDialog = false
-                            colorPalette = generate(primaryColor = colorValue)
-                                .also { darkSwitchOn = !it.isLight }
+                            darkSwitchOn = null
+                            viewModel.setColor(colorValue)
                         }
                     ) {
                         Column(
@@ -217,7 +225,7 @@ fun Material2Contents(
             ) {
                 Text(
                     textAlign = TextAlign.Center,
-                    text = "Text On Button\n\nGo Material3"
+                    text = "Text On Button\n\nTransition to Material3"
                 )
             }
         }
@@ -261,13 +269,13 @@ fun Material2Contents(
 }
 
 
-@Preview
-@Composable
-fun Material2ContentsLightPreview() {
-    Material2Screen(darkTheme = false, navigateTo = {})
-}
-@Preview
-@Composable
-fun Material2ContentsDarkPreview() {
-    Material2Screen(darkTheme = true, navigateTo = {})
-}
+//@Preview
+//@Composable
+//fun Material2ContentsLightPreview() {
+//    Material2Screen(darkTheme = false, navigateTo = {})
+//}
+//@Preview
+//@Composable
+//fun Material2ContentsDarkPreview() {
+//    Material2Screen(darkTheme = true, navigateTo = {})
+//}

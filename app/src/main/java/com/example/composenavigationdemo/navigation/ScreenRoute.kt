@@ -8,3 +8,5 @@ sealed class ScreenRoute(val route: String) {
     data object Material2 : ScreenRoute("material2")
     data object Material3 : ScreenRoute("material3")
 }
+
+val BASE_SCREEN_ROUTE = ScreenRoute.Home.route
