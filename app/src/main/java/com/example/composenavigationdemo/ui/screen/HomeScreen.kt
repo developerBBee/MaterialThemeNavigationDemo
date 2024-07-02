@@ -10,7 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.composenavigationdemo.navigation.ScreenRoute
+import com.example.composenavigationdemo.navigation.ScreenRouter
 
 @Composable
 fun HomeScreen(
@@ -24,19 +24,19 @@ fun HomeScreen(
         verticalArrangement = Arrangement.Top
     ) {
         Text(text = "Home Screen")
-        TextButton(onClick = { navigateTo(ScreenRoute.Second.route) }) {
+        TextButton(onClick = { navigateTo(ScreenRouter.Second.route) }) {
             Text(text = "Go to Second Screen")
         }
-        TextButton(onClick = { navigateTo(ScreenRoute.Third.route) }) {
+        TextButton(onClick = { navigateTo(ScreenRouter.Third.route) }) {
             Text(text = "Go to Third Screen")
         }
-        TextButton(onClick = { navigateTo(ScreenRoute.Last.route) }) {
+        TextButton(onClick = { navigateTo(ScreenRouter.Last.route) }) {
             Text(text = "Go to Last Screen")
         }
-        TextButton(onClick = { navigateTo(ScreenRoute.Material2.route) }) {
+        TextButton(onClick = { navigateTo(ScreenRouter.Material2.route) }) {
             Text(text = "Go to Material2 Screen")
         }
-        TextButton(onClick = { navigateTo(ScreenRoute.Material3.route) }) {
+        TextButton(onClick = { navigateTo(ScreenRouter.Material3.route) }) {
             Text(text = "Go to Material3 Screen")
         }
     }

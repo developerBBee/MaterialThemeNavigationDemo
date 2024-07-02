@@ -27,7 +27,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Typography
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -39,14 +38,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.composenavigationdemo.navigation.ScreenRoute
+import com.example.composenavigationdemo.navigation.ScreenRouter
 import com.example.composenavigationdemo.ui.component.BaseDialog
 import com.example.composenavigationdemo.ui.component.RgbColorPicker
 import com.example.composenavigationdemo.ui.theme.Material3Theme
-import com.example.composenavigationdemo.ui.theme.Orange500
-import com.example.composenavigationdemo.ui.theme.Typography
 import com.example.composenavigationdemo.ui.theme.generate
 import com.example.composenavigationdemo.ui.theme.shouldLight
 import com.example.composenavigationdemo.viewmodel.ColorViewModel
@@ -56,19 +52,13 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Material3Screen(
-    darkTheme: Boolean = false,
-    navigateTo: (String) -> Unit,
+    navigateTo: (ScreenRouter) -> Unit,
     viewModel: ColorViewModel,
 ) {
-    val color by viewModel.color.collectAsState(initial = Orange500)
-    val isDark by viewModel.darkMode.collectAsState(initial = darkTheme)
+    val color by viewModel.color.collectAsState()
+    val isDark by viewModel.darkMode.collectAsState()
 
-    var darkSwitchOn: Boolean? by remember { mutableStateOf(null) }
-
-    val colorScheme = (darkSwitchOn?.let {
-        generate(primaryColor = color, useLight = !it)
-    }?: generate(primaryColor = color))
-        .also { viewModel.toggleMode(!it.shouldLight) }
+    val colorScheme = generate(primaryColor = color, useLight = !isDark)
 
     var showDialog by remember { mutableStateOf(false) }
 
@@ -85,11 +75,7 @@ fun Material3Screen(
                         Text(text = "Light")
                         Switch(
                             checked = isDark,
-                            onCheckedChange = {
-                                darkSwitchOn = it
-                                viewModel.toggleMode(dark = it)
-                                viewModel.setColor(color = colorScheme.primary)
-                            }
+                            onCheckedChange = { viewModel.toggleMode(dark = it) }
                         )
                         Text(text = "Dark")
                     }
@@ -113,7 +99,7 @@ fun Material3Screen(
             ) {
                 Material3Contents(
                     modifier = Modifier.fillMaxSize(),
-                    onButtonClick = { navigateTo(ScreenRoute.Material2.route) },
+                    onButtonClick = { navigateTo(ScreenRouter.Material2) },
                 )
 
                 if (showDialog) {
@@ -126,8 +112,9 @@ fun Material3Screen(
                         },
                         onPositiveClick = {
                             showDialog = false
-                            darkSwitchOn = null
                             viewModel.setColor(color = colorValue)
+                            generate(primaryColor = colorValue)
+                                .also { viewModel.toggleMode(!it.shouldLight) }
                         }
                     ) {
                         Column(
@@ -196,7 +183,7 @@ fun Material3Contents(
                 }
             }
         ) {
-            val text = if (buttonEnable) "Button Enabled" else "Button Disabled"
+            val text = if (buttonEnable) "Enabled" else "Disabled"
             Text(
                 textAlign = TextAlign.Center,
                 text =  "Text On OutlinedButton\n\n$text"
@@ -217,7 +204,10 @@ fun Material3Contents(
             }
         }
 
-        Button(onClick = onButtonClick) {
+        Button(
+            enabled = buttonEnable,
+            onClick = onButtonClick
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.8f)

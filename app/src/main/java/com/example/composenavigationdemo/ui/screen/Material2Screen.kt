@@ -39,13 +39,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.composenavigationdemo.navigation.ScreenRoute
+import com.example.composenavigationdemo.navigation.ScreenRouter
 import com.example.composenavigationdemo.ui.component2.BaseDialog
 import com.example.composenavigationdemo.ui.component2.RgbColorPicker
 import com.example.composenavigationdemo.ui.theme2.Material2Theme
-import com.example.composenavigationdemo.ui.theme2.Orange500
 import com.example.composenavigationdemo.ui.theme2.generate
 import com.example.composenavigationdemo.viewmodel.ColorViewModel
 import kotlinx.coroutines.delay
@@ -53,23 +51,17 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun Material2Screen(
-    darkTheme: Boolean = false,
-    navigateTo: (String) -> Unit,
+    navigateTo: (ScreenRouter) -> Unit,
     viewModel: ColorViewModel,
 ) {
-    val color by viewModel.color.collectAsState(initial = Orange500)
-    val isDark by viewModel.darkMode.collectAsState(initial = darkTheme)
+    val color by viewModel.color.collectAsState()
+    val isDark by viewModel.darkMode.collectAsState()
 
-    var darkSwitchOn: Boolean? by remember { mutableStateOf(null) }
-
-    val colorPalette = (darkSwitchOn?.let {
-        generate(primaryColor = color, useLight = !it)
-    } ?: generate(primaryColor = color))
-        .also { viewModel.toggleMode(!it.isLight) }
+    val colorPalette = generate(primaryColor = color, useLight = !isDark)
 
     var showDialog by remember { mutableStateOf(false) }
 
-    var colorValue =colorPalette.primary
+    var colorValue = colorPalette.primary
 
     Material2Theme(colorPalette = colorPalette) {
 
@@ -85,11 +77,7 @@ fun Material2Screen(
                     Text(text = "Light")
                     Switch(
                         checked = isDark,
-                        onCheckedChange = {
-                            darkSwitchOn = it
-                            viewModel.toggleMode(dark = it)
-                            viewModel.setColor(color = colorPalette.primary)
-                        }
+                        onCheckedChange = { viewModel.toggleMode(dark = it) }
                     )
                     Text(text = "Dark")
                 }
@@ -112,7 +100,7 @@ fun Material2Screen(
             ) {
                 Material2Contents(
                     modifier = Modifier.fillMaxSize(),
-                    onButtonClick = { navigateTo(ScreenRoute.Material3.route) },
+                    onButtonClick = { navigateTo(ScreenRouter.Material3) },
                 )
 
                 if (showDialog) {
@@ -125,8 +113,9 @@ fun Material2Screen(
                         },
                         onPositiveClick = {
                             showDialog = false
-                            darkSwitchOn = null
-                            viewModel.setColor(colorValue)
+                            viewModel.setColor(color = colorValue)
+                            generate(primaryColor = colorValue)
+                                .also { viewModel.toggleMode(!it.isLight) }
                         }
                     ) {
                         Column(
@@ -195,7 +184,7 @@ fun Material2Contents(
                 }
             }
         ) {
-            val text = if (buttonEnable) "Button Enabled" else "Button Disabled"
+            val text = if (buttonEnable) "Enabled" else "Disabled"
             Text(
                 textAlign = TextAlign.Center,
                 text =  "Text On OutlinedButton\n\n$text"
@@ -216,7 +205,10 @@ fun Material2Contents(
             }
         }
 
-        Button(onClick = onButtonClick) {
+        Button(
+            enabled = buttonEnable,
+            onClick = onButtonClick
+        ) {
             Box(
                 modifier = Modifier
                     .fillMaxWidth(0.8f)
